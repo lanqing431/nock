@@ -71,6 +71,30 @@ describe('`enableNetConnect()`', () => {
     expect(onResponse).to.have.been.calledOnce()
   })
 
+  for (const flags of ['', 'g', 'y']) {
+    it(`consistently matches repeated requests via regexp with flags '${flags}'`, async () => {
+      const onResponse = sinon.spy()
+      const { origin } = await servers.startHttpServer((request, response) => {
+        onResponse()
+        response.writeHead(200)
+        response.end()
+      })
+
+      nock.enableNetConnect(new RegExp('^localhost:', flags))
+
+      for (let i = 0; i < 3; i++) {
+        const response = await got(origin)
+        expect(response.statusCode).to.equal(200)
+      }
+      expect(onResponse).to.have.been.calledThrice()
+
+      await assertRejects(
+        got('https://example.test/'),
+        /Nock: Disallowed net connect for "example.test:443\/"/,
+      )
+    })
+  }
+
   it('disallows request for other domains, via regexp', async () => {
     nock.enableNetConnect(/ocalhos/)
 

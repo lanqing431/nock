@@ -23,7 +23,12 @@ function enableNetConnect(
 }
 
 function isEnabledForNetConnect(url: string) {
-  const enabled = !!(allowNetConnect && allowNetConnect.test(url))
+  const enabled = !!(
+    allowNetConnect &&
+    (allowNetConnect instanceof RegExp
+      ? common.matchStringOrRegexp(url, allowNetConnect)
+      : allowNetConnect.test(url))
+  )
   debug('Net connect', enabled ? '' : 'not', 'enabled for', url)
   return enabled
 }
